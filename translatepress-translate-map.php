@@ -4,9 +4,9 @@
  * Plugin Name: TranslatePress - Translation Map Manager
  * Plugin URI: https://translatepress.com/
  * Description: Advanced translation word mapping manager for TranslatePress that allows custom translation overrides with dynamic language switching.
- * Version: 1.0.0
+ * Version: 1.0.5
  * Author: Developerjillur
- * Author URI: https://translatepress.com/
+ * Author URI: https://developerjillur.me/
  * Text Domain: trp-translate-map
  * Domain Path: /languages
  * Requires at least: 4.0

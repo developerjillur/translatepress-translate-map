@@ -1,122 +1,240 @@
 # TranslatePress - Translation Map Manager
 
-A WordPress plugin that provides custom translation mappings for TranslatePress, with special support for AJAX-loaded content.
+A powerful WordPress plugin that extends TranslatePress functionality with custom translation word mapping capabilities. This plugin allows you to create, manage, and apply custom translation mappings that work seamlessly with TranslatePress multilingual plugin.
 
-## Description
+## Features
 
-TranslatePress Translation Map Manager allows you to create custom translation mappings that work with dynamically loaded content. It's perfect for single-page applications, AJAX-loaded content, and other dynamic elements that traditional translation plugins might miss.
+### 🎯 Core Features
+- **Custom Translation Mapping**: Create custom word-to-word translations for any language
+- **TranslatePress Integration**: Seamlessly integrates with existing TranslatePress setup
+- **Language Auto-Detection**: Automatically detects and uses TranslatePress configured languages
+- **Dynamic Frontend Translation**: Real-time translation replacement on frontend
+- **AJAX-Powered Interface**: Smooth, responsive admin experience
 
-### Key Features
+### 📋 Management Features
+- **Translation Management**: Add, edit, delete, and search translations
+- **Bulk Operations**: Import/export translations via CSV
+- **Language Statistics**: View translation counts per language
+- **Search & Filter**: Find translations quickly with advanced search
+- **Translation Priority**: Set override preferences for TranslatePress conflicts
 
-- **Custom Translation Mappings**: Create direct translations for specific text strings
-- **AJAX Support**: Automatically translates dynamically loaded content
-- **Language Detection**: Works with TranslatePress language detection
-- **Easy Management**: User-friendly admin interface for managing translations
-- **Import/Export**: Bulk import and export translations
-- **Real-time Updates**: No page refreshes needed in the admin interface
+### 🔧 Technical Features
+- **Database Optimization**: Efficient database storage with proper indexing
+- **AJAX Dynamic Loading**: Handle dynamic content and single-page applications
+- **Translation Caching**: Optimized performance with smart caching
+- **RTL Language Support**: Full support for Arabic and other RTL languages
+- **Responsive Design**: Mobile-friendly admin interface
 
 ## Installation
 
-1. Upload the `translatepress-translate-map` folder to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Settings > TranslatePress Map to manage translations
+### Requirements
+- WordPress 4.0 or higher
+- PHP 5.6 or higher
+- TranslatePress plugin (required)
+
+### Installation Steps
+
+1. **Download the Plugin**
+   ```
+   /wp-content/plugins/translatepress-translate-map/
+   ```
+
+2. **Activate Dependencies**
+   - Ensure TranslatePress is installed and activated
+   - Configure your languages in TranslatePress settings
+
+3. **Activate the Plugin**
+   - Go to WordPress Admin → Plugins
+   - Activate "TranslatePress - Translation Map Manager"
+
+4. **Database Setup**
+   - Plugin will automatically create required database tables on activation
 
 ## Usage
 
-### Adding Translations
+### Quick Start
 
-1. Navigate to Settings > TranslatePress Map
-2. Click on the "Add Translation" tab
-3. Enter the original text, translated text, and select the language
-4. Click "Add Translation"
+1. **Access the Plugin**
+   - Go to Settings → Translation Map in WordPress admin
 
-### Managing Translations
+2. **Add Your First Translation**
+   - Click "Add Translation" tab
+   - Enter original text: `Upcoming`
+   - Enter translation: `القادمة`
+   - Select language: `Arabic`
+   - Click "Add Translation"
 
-1. Go to the "Manage Translations" tab
-2. Use the search and filter options to find translations
-3. Edit or delete translations as needed
+3. **View on Frontend**
+   - Visit your Arabic site
+   - The word "Upcoming" will automatically display as "القادمة"
 
-### Importing/Exporting Translations
+### Bulk Import Example
 
-1. Navigate to the "Import/Export" tab
-2. For importing:
-   - Paste translations in the format: `Original|Translation|Language`
-   - Click "Import"
-3. For exporting:
-   - Select the language
-   - Click "Export"
-   - Download the CSV file
-
-### Settings
-
-1. Go to the "Settings" tab
-2. Enable/disable frontend translation
-3. Set translation priority
-
-## Frontend Usage
-
-The plugin automatically translates content when the page language matches one of your configured languages. For AJAX-loaded content, the plugin uses a MutationObserver to detect and translate new content as it's added to the page.
-
-### Example
-
-When a user visits your Arabic version of the site:
-
-```html
-<!-- Original English content -->
-<div id="dashboard-menu">Upcoming</div>
-
-<!-- Automatically translated to Arabic -->
-<div id="dashboard-menu">القادمة</div>
+Use the following format for bulk import:
+```
+Upcoming|القادمة|ar
+Profile|الملف الشخصي|ar
+My Calendar|تقويمي|ar
+My Appointments|مواعيدي|ar
+My Space Booking|حجز المساحة الخاص بي|ar
 ```
 
-## Technical Details
+### CSV Import Format
+```csv
+Original Text,Translation,Language Code
+Upcoming,القادمة,ar
+Profile,الملف الشخصي,ar
+My Calendar,تقويمي,ar
+```
 
-### Database Structure
+## Configuration
 
-The plugin creates a custom table `wp_trp_translate_map` with the following structure:
+### Plugin Settings
 
-- `id` (int): Primary key
-- `original_text` (text): The original text to translate
-- `translated_text` (text): The translated text
-- `language_code` (varchar): The language code (e.g., 'ar', 'en_US')
-- `status` (enum): 'active' or 'inactive'
-- `created_at` (datetime): When the translation was created
-- `updated_at` (datetime): When the translation was last updated
+Navigate to Settings → Translation Map → Settings:
 
-### Hooks
+#### Frontend Translation
+- **Enable**: Turn on/off automatic frontend translation
+- **Default**: Enabled
 
-The plugin provides several hooks for developers:
+#### Translation Priority
+- **High**: Override TranslatePress translations
+- **Low**: Use only when TranslatePress doesn't have translation
+- **Default**: High
 
-- `trp_tm_before_add_translation`: Fires before adding a translation
-- `trp_tm_after_add_translation`: Fires after adding a translation
-- `trp_tm_before_update_translation`: Fires before updating a translation
-- `trp_tm_after_update_translation`: Fires after updating a translation
-- `trp_tm_before_delete_translation`: Fires before deleting a translation
-- `trp_tm_after_delete_translation`: Fires after deleting a translation
+### Integration Settings
 
-### JavaScript API
+The plugin automatically detects:
+- TranslatePress configured languages
+- Current active language
+- Default site language
 
-For advanced users, the plugin exposes a JavaScript API:
+## Developer Information
 
+### Database Schema
+
+The plugin creates one main table:
+
+```sql
+CREATE TABLE wp_trp_translate_map (
+    id mediumint(9) NOT NULL AUTO_INCREMENT,
+    original_text varchar(500) NOT NULL,
+    translated_text text NOT NULL,
+    language_code varchar(10) NOT NULL,
+    status varchar(20) DEFAULT 'active',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP,
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY original_text (original_text),
+    KEY language_code (language_code),
+    KEY status (status),
+    UNIQUE KEY unique_translation (original_text, language_code)
+);
+```
+
+### Hooks and Filters
+
+#### Actions
+- `trp_tm_translation_added` - Fired when translation is added
+- `trp_tm_translation_updated` - Fired when translation is updated
+- `trp_tm_translation_deleted` - Fired when translation is deleted
+
+#### Filters
+- `trp_tm_frontend_translations` - Modify frontend translations
+- `trp_tm_translation_priority` - Modify translation priority
+- `trp_translate_string` - TranslatePress integration hook
+
+### JavaScript Integration
+
+#### Frontend Translation Override
 ```javascript
-// Manually translate a string
-const translated = TrpTranslateMap.translate('Hello', 'ar');
-console.log(translated); // مرحبا
+// Exclude specific elements from translation
+$('.no-translate').attr('data-no-translation', '');
 
-// Force retranslation of dynamic content
-TrpTranslateMap.retranslateContent(document.querySelector('#dynamic-content'));
+// Force translation on specific elements
+$('.force-translate').attr('data-trp-tm-translated', 'true');
 ```
 
-## Requirements
+#### Admin Extensions
+```javascript
+// Custom admin functionality
+jQuery(document).on('trp_tm_translation_saved', function(event, translation) {
+    console.log('Translation saved:', translation);
+});
+```
 
-- WordPress 5.0 or higher
-- PHP 7.4 or higher
-- TranslatePress plugin (recommended but not required)
+## Troubleshooting
+
+### Common Issues
+
+1. **Translations Not Showing**
+   - Ensure TranslatePress is active and configured
+   - Check that frontend translation is enabled in settings
+   - Verify language codes match TranslatePress configuration
+
+2. **AJAX Errors**
+   - Check WordPress debug logs
+   - Verify user permissions (manage_options capability required)
+   - Ensure nonce verification is working
+
+3. **Performance Issues**
+   - Use translation priority "Low" to reduce conflicts
+   - Check for JavaScript console errors
+   - Ensure proper caching configuration
+
+### Debug Mode
+
+Enable WordPress debug mode to see detailed error logs:
+```php
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+```
+
+## Support
+
+### Documentation
+- [TranslatePress Documentation](https://translatepress.com/docs/)
+- [WordPress Plugin Development](https://developer.wordpress.org/plugins/)
+
+### Compatibility
+- TranslatePress Multilingual: ✅ Compatible
+- TranslatePress Developer Add-ons: ✅ Compatible
+- WordPress Multisite: ✅ Compatible
+- Popular Themes: ✅ Compatible
+- Page Builders (Elementor, etc.): ✅ Compatible
+
+## Changelog
+
+### Version 1.0.0
+- Initial release
+- Core translation mapping functionality
+- TranslatePress integration
+- Admin interface with CRUD operations
+- Bulk import/export features
+- Frontend dynamic translation
+- AJAX-powered interface
+- RTL language support
 
 ## License
 
 This plugin is licensed under the GPL v2 or later.
 
-## Credits
+```
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
-Developed by [Developerjillur](https://github.com/developerjillur) 
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit pull requests or create issues for bugs and feature requests.
+
+---
+
+**Made with ❤️ for the WordPress community** 
