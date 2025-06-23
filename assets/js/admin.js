@@ -8,6 +8,7 @@ jQuery(document).ready(function ($) {
   initSearchAndFilter();
   initImportExport();
   initTabNavigation();
+  initCSSEditor();
 
   /**
    * Initialize translation management
@@ -167,6 +168,62 @@ jQuery(document).ready(function ($) {
     // Store scroll position before page unload
     $(window).on("beforeunload", function () {
       sessionStorage.setItem("trp_scroll_position", $(window).scrollTop());
+    });
+  }
+
+  /**
+   * Initialize CSS editor functionality
+   */
+  function initCSSEditor() {
+    // Language selector change
+    $(document).on("change", "#css-language-selector", function () {
+      var selectedLanguage = $(this).val();
+      if (selectedLanguage) {
+        // Redirect to same page with language parameter
+        var currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set("css_lang", selectedLanguage);
+        window.location.href = currentUrl.toString();
+      }
+    });
+
+    // CSS form submission
+    $(document).on("submit", "#trp-tm-css-form", function (e) {
+      e.preventDefault();
+      saveCSSForLanguage();
+    });
+
+    // Format CSS button
+    $(document).on("click", "#trp-tm-css-format", function (e) {
+      e.preventDefault();
+      formatCSS();
+    });
+
+    // Clear CSS button
+    $(document).on("click", "#trp-tm-css-clear", function (e) {
+      e.preventDefault();
+      if (confirm("Are you sure you want to clear all CSS code?")) {
+        $("#trp-tm-css-editor").val("");
+        showCSSStatus("CSS cleared successfully.", "success");
+      }
+    });
+
+    // Validate CSS button
+    $(document).on("click", "#trp-tm-css-validate", function (e) {
+      e.preventDefault();
+      validateCSS();
+    });
+
+    // Enhanced textarea for better editing experience
+    $(document).on("keydown", "#trp-tm-css-editor", function (e) {
+      // Handle Tab key for proper indentation
+      if (e.key === "Tab") {
+        e.preventDefault();
+        var start = this.selectionStart;
+        var end = this.selectionEnd;
+        var value = this.value;
+        this.value = value.substring(0, start) + "    " + value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+      }
     });
   }
 
@@ -749,5 +806,251 @@ jQuery(document).ready(function ($) {
     return text.replace(/[&<>"']/g, function (m) {
       return map[m];
     });
+  }
+
+  /**
+   * Save CSS for selected language
+   */
+  function saveCSSForLanguage() {
+    var $form = $("#trp-tm-css-form");
+    var $button = $form.find('button[type="submit"]');
+    var originalText = $button.text();
+
+    var languageCode = $form.find('input[name="css_language"]').val();
+    var customCSS = $("#trp-tm-css-editor").val();
+    var minifyCSS = $("#trp-tm-minify-css").is(":checked");
+
+    if (!languageCode) {
+      showCSSStatus("Language code is missing.", "error");
+      return;
+    }
+
+    $button.text("Saving...").prop("disabled", true);
+
+    $.ajax({
+      url: trpTmAdmin.ajax_url,
+      type: "POST",
+      data: {
+        action: "trp_tm_save_css",
+        nonce: trpTmAdmin.nonce,
+        language_code: languageCode,
+        custom_css: customCSS,
+        minify_css: minifyCSS ? 1 : 0,
+      },
+      success: function (response) {
+        if (response.success) {
+          showCSSStatus("CSS saved successfully!", "success");
+
+          // Update the example output
+          updateCSSExample(response.data.processed_css, languageCode);
+        } else {
+          showCSSStatus(response.data.message, "error");
+        }
+      },
+      error: function () {
+        showCSSStatus("Error occurred while saving CSS!", "error");
+      },
+      complete: function () {
+        $button.text(originalText).prop("disabled", false);
+      },
+    });
+  }
+
+  /**
+   * Format CSS code
+   */
+  function formatCSS() {
+    var cssContent = $("#trp-tm-css-editor").val();
+
+    if (!cssContent.trim()) {
+      showCSSStatus("No CSS content to format.", "warning");
+      return;
+    }
+
+    try {
+      // Basic CSS formatting
+      var formatted = cssContent
+        // Remove extra whitespace
+        .replace(/\s+/g, " ")
+        // Add proper spacing around braces
+        .replace(/\s*{\s*/g, " {\n    ")
+        .replace(/;\s*/g, ";\n    ")
+        .replace(/\s*}\s*/g, "\n}\n\n")
+        // Clean up extra newlines
+        .replace(/\n\s*\n\s*\n/g, "\n\n")
+        .trim();
+
+      $("#trp-tm-css-editor").val(formatted);
+      showCSSStatus("CSS formatted successfully.", "success");
+    } catch (error) {
+      showCSSStatus("Error formatting CSS: " + error.message, "error");
+    }
+  }
+
+  /**
+   * Validate CSS syntax
+   */
+  function validateCSS() {
+    var cssContent = $("#trp-tm-css-editor").val();
+
+    if (!cssContent.trim()) {
+      showCSSStatus("No CSS content to validate.", "warning");
+      return;
+    }
+
+    var errors = [];
+    var warnings = [];
+
+    // Basic CSS validation
+    var lines = cssContent.split("\n");
+    var openBraces = 0;
+    var inRule = false;
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      var lineNumber = i + 1;
+
+      if (
+        !line ||
+        line.startsWith("/*") ||
+        line.startsWith("*") ||
+        line.startsWith("*/")
+      ) {
+        continue;
+      }
+
+      // Count braces
+      var openCount = (line.match(/\{/g) || []).length;
+      var closeCount = (line.match(/\}/g) || []).length;
+      openBraces += openCount - closeCount;
+
+      // Check for unclosed declarations
+      if (line.includes("{")) {
+        inRule = true;
+      }
+      if (line.includes("}")) {
+        inRule = false;
+      }
+
+      // Basic syntax checking
+      if (
+        inRule &&
+        line.includes(":") &&
+        !line.includes(";") &&
+        !line.includes("{") &&
+        !line.includes("}")
+      ) {
+        warnings.push("Line " + lineNumber + ": Missing semicolon");
+      }
+
+      // Check for common errors
+      if (line.includes(";;")) {
+        warnings.push("Line " + lineNumber + ": Double semicolon");
+      }
+    }
+
+    if (openBraces !== 0) {
+      errors.push(
+        "Mismatched braces: " +
+          Math.abs(openBraces) +
+          " " +
+          (openBraces > 0 ? "unclosed" : "extra closing") +
+          " brace(s)"
+      );
+    }
+
+    // Display results
+    if (errors.length === 0 && warnings.length === 0) {
+      showCSSStatus("CSS validation passed successfully!", "success");
+    } else if (errors.length > 0) {
+      showCSSStatus("CSS validation failed: " + errors.join(", "), "error");
+    } else {
+      showCSSStatus(
+        "CSS validation passed with warnings: " + warnings.join(", "),
+        "warning"
+      );
+    }
+  }
+
+  /**
+   * Show CSS status message
+   */
+  function showCSSStatus(message, type) {
+    var $statusDiv = $("#trp-tm-css-status");
+    var $notice = $statusDiv.find(".notice");
+    var $message = $notice.find("p");
+
+    $notice
+      .removeClass("notice-success notice-error notice-warning")
+      .addClass("notice-" + type);
+    $message.text(message);
+    $statusDiv.show();
+
+    // Auto hide after 5 seconds
+    setTimeout(function () {
+      $statusDiv.fadeOut();
+    }, 5000);
+  }
+
+  /**
+   * Process CSS with language prefix (client-side preview)
+   */
+  function processCSSWithPrefix(css, languageCode) {
+    if (!css.trim()) {
+      return "";
+    }
+
+    var prefix = `html[lang="${languageCode}"]`;
+    var processedCSS = "";
+
+    // Split CSS into rules
+    var rules = css.split("}");
+
+    rules.forEach(function (rule) {
+      rule = rule.trim();
+      if (!rule) return;
+
+      rule += "}";
+
+      // Find the selector (everything before the first {)
+      var bracePos = rule.indexOf("{");
+      if (bracePos === -1) return;
+
+      var selector = rule.substring(0, bracePos).trim();
+      var declarations = rule.substring(bracePos);
+
+      // Handle multiple selectors separated by commas
+      var selectors = selector.split(",");
+      var prefixedSelectors = [];
+
+      selectors.forEach(function (singleSelector) {
+        singleSelector = singleSelector.trim();
+        if (singleSelector) {
+          // Check if selector already has html prefix
+          if (singleSelector.indexOf("html[lang=") === 0) {
+            prefixedSelectors.push(singleSelector);
+          } else {
+            prefixedSelectors.push(prefix + " " + singleSelector);
+          }
+        }
+      });
+
+      if (prefixedSelectors.length > 0) {
+        processedCSS +=
+          prefixedSelectors.join(", ") + " " + declarations + "\n";
+      }
+    });
+
+    return processedCSS;
+  }
+
+  /**
+   * Update CSS example output
+   */
+  function updateCSSExample(processedCSS, languageCode) {
+    var $exampleOutput = $(".trp-tm-css-example-output code");
+    if ($exampleOutput.length > 0) {
+      $exampleOutput.text(processedCSS);
+    }
   }
 });

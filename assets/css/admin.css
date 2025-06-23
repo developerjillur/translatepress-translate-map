@@ -438,3 +438,397 @@ input[type="file"]:hover {
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
+
+/* CSS Editor Tab Styles */
+.trp-tm-css-tab {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    padding: 20px;
+}
+
+.trp-tm-css-tab h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #23282d;
+}
+
+.trp-tm-css-language-selector {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.trp-tm-css-language-selector label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.trp-tm-css-language-selector select {
+    min-width: 250px;
+    padding: 8px 12px;
+}
+
+.trp-tm-css-editor-container {
+    margin-top: 20px;
+}
+
+.trp-tm-css-editor-header {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.trp-tm-css-editor-header h4 {
+    margin: 0 0 10px 0;
+    color: #23282d;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trp-tm-css-lang-code {
+    font-size: 14px;
+    color: #666;
+    font-weight: normal;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.trp-tm-css-editor {
+    margin-bottom: 20px;
+}
+
+.trp-tm-css-editor textarea {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    resize: vertical;
+    min-height: 300px;
+    tab-size: 2;
+    -moz-tab-size: 2;
+}
+
+.trp-tm-css-editor textarea:focus {
+    background: #fff;
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: none;
+}
+
+.trp-tm-css-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    border-top: 1px solid #ddd;
+    padding-top: 15px;
+}
+
+.trp-tm-css-actions .submit {
+    margin: 0;
+}
+
+.trp-tm-css-example {
+    margin-top: 30px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.trp-tm-css-example h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #23282d;
+}
+
+.trp-tm-css-example-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.trp-tm-css-example-input,
+.trp-tm-css-example-output {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.trp-tm-css-example-input strong,
+.trp-tm-css-example-output strong {
+    display: block;
+    margin-bottom: 10px;
+    color: #23282d;
+    font-size: 14px;
+}
+
+.trp-tm-css-example-input {
+    border-left: 4px solid #0073aa;
+}
+
+.trp-tm-css-example-output {
+    border-left: 4px solid #46b450;
+}
+
+.trp-tm-css-example pre {
+    margin: 0;
+    background: #f8f8f8;
+    padding: 12px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.trp-tm-css-no-language {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.trp-tm-css-no-language p {
+    margin: 0;
+    font-size: 16px;
+}
+
+/* Responsive CSS Editor */
+@media (max-width: 768px) {
+    .trp-tm-css-example-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .trp-tm-css-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .trp-tm-css-actions .button {
+        margin-bottom: 5px;
+    }
+    
+    .trp-tm-css-language-selector select {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+/* Syntax highlighting hints */
+.trp-tm-css-editor textarea {
+    color: #333;
+}
+
+/* CSS Editor focus states */
+.trp-tm-css-editor textarea:focus {
+    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.2);
+}
+
+/* Button styling for CSS tab */
+.trp-tm-css-tab .button-primary {
+    background: #0073aa;
+    border-color: #0073aa;
+}
+
+.trp-tm-css-tab .button-primary:hover {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+.trp-tm-css-tab .button-secondary {
+    color: #0073aa;
+    border-color: #0073aa;
+}
+
+.trp-tm-css-tab .button-secondary:hover {
+    background: #0073aa;
+    color: #fff;
+}
+
+/* Enhanced CSS Editor Wrapper */
+.trp-tm-css-editor-wrapper {
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.trp-tm-css-editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #23282d;
+    color: #fff;
+    padding: 8px 12px;
+    border-bottom: 1px solid #32373c;
+}
+
+.trp-tm-css-info {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.trp-tm-css-toolbar-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.trp-tm-css-toolbar-buttons .button {
+    height: 24px;
+    min-height: 24px;
+    padding: 0 8px;
+    line-height: 22px;
+    font-size: 11px;
+    border-color: #46494c;
+    background: #32373c;
+    color: #fff;
+}
+
+.trp-tm-css-toolbar-buttons .button:hover {
+    background: #46494c;
+    border-color: #5a5d60;
+    color: #fff;
+}
+
+.trp-tm-css-toolbar-buttons .button .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+}
+
+/* Enhanced Code Editor Textarea */
+.trp-tm-code-editor {
+    width: 100%;
+    min-height: 500px;
+    border: none;
+    outline: none;
+    resize: vertical;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    background: #1e1e1e !important;
+    color: #d4d4d4 !important;
+    padding: 16px !important;
+    tab-size: 4;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+}
+
+.trp-tm-code-editor:focus {
+    box-shadow: inset 0 0 0 2px #007cba;
+}
+
+.trp-tm-code-editor::placeholder {
+    color: #6a6a6a;
+    font-style: italic;
+}
+
+/* CSS Options */
+.trp-tm-css-options {
+    margin: 20px 0;
+    padding: 15px;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.trp-tm-css-options label {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.trp-tm-css-options input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.trp-tm-css-options .description {
+    margin-top: 8px;
+    margin-left: 20px;
+    font-style: italic;
+    color: #666;
+}
+
+.trp-tm-css-actions .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.trp-tm-css-actions .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* CSS Status Messages */
+.trp-tm-css-status {
+    margin-top: 15px;
+}
+
+.trp-tm-css-status .notice {
+    margin: 0;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
+
+.trp-tm-css-status .notice.notice-success {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.trp-tm-css-status .notice.notice-error {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.trp-tm-css-status .notice.notice-warning {
+    background: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+/* Enhanced responsive design */
+@media (max-width: 768px) {
+    .trp-tm-css-toolbar {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .trp-tm-css-toolbar-buttons {
+        align-self: flex-end;
+    }
+    
+    .trp-tm-code-editor {
+        font-size: 13px !important;
+        min-height: 400px;
+    }
+}
+

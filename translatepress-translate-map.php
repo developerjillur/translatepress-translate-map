@@ -130,6 +130,7 @@ class TRP_Translate_Map
         // Frontend hooks
         add_action('wp_enqueue_scripts', array($this->frontend, 'enqueue_frontend_scripts'));
         add_action('wp_footer', array($this->frontend, 'render_translation_script'));
+        add_action('wp_head', array($this->frontend, 'add_frontend_styles'));
     }
 
     /**
@@ -146,16 +147,16 @@ class TRP_Translate_Map
     public function translatepress_missing_notice()
     {
 ?>
-        <div class="notice notice-error">
-            <p>
-                <?php
+<div class="notice notice-error">
+    <p>
+        <?php
                 printf(
                     __('TranslatePress - Translation Map Manager requires %s to be installed and active.', 'trp-translate-map'),
                     '<strong>TranslatePress</strong>'
                 );
                 ?>
-            </p>
-        </div>
+    </p>
+</div>
 <?php
     }
 

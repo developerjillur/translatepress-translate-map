@@ -95,6 +95,9 @@ class TRP_TM_Admin
                 <a href="?page=trp-translate-map&tab=add" class="nav-tab <?php echo $active_tab === 'add' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Add Translation', 'trp-translate-map'); ?>
                 </a>
+                <a href="?page=trp-translate-map&tab=css" class="nav-tab <?php echo $active_tab === 'css' ? 'nav-tab-active' : ''; ?>">
+                    <?php _e('Custom CSS', 'trp-translate-map'); ?>
+                </a>
                 <a href="?page=trp-translate-map&tab=import" class="nav-tab <?php echo $active_tab === 'import' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Import/Export', 'trp-translate-map'); ?>
                 </a>
@@ -108,6 +111,9 @@ class TRP_TM_Admin
                 switch ($active_tab) {
                     case 'add':
                         $this->render_add_tab();
+                        break;
+                    case 'css':
+                        $this->render_css_tab();
                         break;
                     case 'import':
                         $this->render_import_tab();
@@ -281,6 +287,133 @@ class TRP_TM_Admin
                     </p>
                 </form>
             </div>
+        </div>
+    <?php
+    }
+
+    /**
+     * Render custom CSS tab
+     */
+    private function render_css_tab()
+    {
+        $current_language = isset($_GET['css_lang']) ? sanitize_text_field($_GET['css_lang']) : '';
+        $css_content = '';
+        $minify_setting = false;
+
+        if ($current_language) {
+            $css_content = get_option('trp_tm_custom_css_' . $current_language, '');
+            $minify_setting = get_option('trp_tm_minify_css_' . $current_language, false);
+        }
+    ?>
+        <div class="trp-tm-css-tab">
+            <h3><?php _e('Custom CSS Editor', 'trp-translate-map'); ?></h3>
+            <p class="description">
+                <?php _e('Add custom CSS for specific languages. The CSS will be automatically applied when the specific language is active on the frontend.', 'trp-translate-map'); ?>
+            </p>
+
+            <div class="trp-tm-css-language-selector">
+                <label for="css-language-selector"><?php _e('Select Language:', 'trp-translate-map'); ?></label>
+                <select id="css-language-selector" name="css_language">
+                    <option value=""><?php _e('Select a language to edit CSS', 'trp-translate-map'); ?></option>
+                    <?php foreach ($this->get_available_languages() as $code => $name): ?>
+                        <option value="<?php echo esc_attr($code); ?>" <?php selected($current_language, $code); ?>>
+                            <?php echo esc_html($name); ?> (<?php echo esc_html($code); ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <?php if ($current_language): ?>
+                <div class="trp-tm-css-editor-container">
+                    <div class="trp-tm-css-editor-header">
+                        <h4>
+                            <?php printf(__('Custom CSS for %s', 'trp-translate-map'), $this->get_language_name($current_language)); ?>
+                            <span class="trp-tm-css-lang-code">(<?php echo esc_html($current_language); ?>)</span>
+                        </h4>
+                        <p class="description">
+                            <?php printf(__('CSS will be automatically prefixed with: %s', 'trp-translate-map'), '<code>html[lang="' . esc_html($current_language) . '"]</code>'); ?>
+                        </p>
+                    </div>
+
+                    <form id="trp-tm-css-form" method="post">
+                        <div class="trp-tm-css-editor-wrapper">
+                            <div class="trp-tm-css-editor-toolbar">
+                                <span class="trp-tm-css-info"><?php _e('CSS Code Editor', 'trp-translate-map'); ?></span>
+                                <div class="trp-tm-css-toolbar-buttons">
+                                    <button type="button" id="trp-tm-css-format" class="button button-small" title="<?php _e('Format CSS', 'trp-translate-map'); ?>">
+                                        <span class="dashicons dashicons-editor-code"></span>
+                                    </button>
+                                    <button type="button" id="trp-tm-css-clear" class="button button-small" title="<?php _e('Clear CSS', 'trp-translate-map'); ?>">
+                                        <span class="dashicons dashicons-trash"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="trp-tm-css-editor">
+                                <textarea id="trp-tm-css-editor" name="custom_css" rows="25" class="trp-tm-code-editor" spellcheck="false" placeholder="/* Enter your CSS code here */&#10;.my-class {&#10;    color: #333;&#10;    font-size: 16px;&#10;}&#10;&#10;/* This will be automatically prefixed as: */&#10;/* html[lang='<?php echo esc_attr($current_language); ?>'] .my-class { ... } */"><?php echo esc_textarea($css_content); ?></textarea>
+                            </div>
+                        </div>
+
+                        <div class="trp-tm-css-options">
+                            <label>
+                                <input type="checkbox" id="trp-tm-minify-css" name="minify_css" value="1" <?php checked($minify_setting); ?>>
+                                <?php _e('Load minified CSS (recommended for production)', 'trp-translate-map'); ?>
+                            </label>
+                            <p class="description"><?php _e('When enabled, CSS will be minified to reduce file size and improve loading speed.', 'trp-translate-map'); ?></p>
+                        </div>
+
+                        <div class="trp-tm-css-actions">
+                            <input type="hidden" name="css_language" value="<?php echo esc_attr($current_language); ?>">
+                            <p class="submit">
+                                <button type="submit" class="button button-primary">
+                                    <span class="dashicons dashicons-saved"></span>
+                                    <?php _e('Save CSS', 'trp-translate-map'); ?>
+                                </button>
+                                <button type="button" id="trp-tm-css-validate" class="button button-secondary">
+                                    <span class="dashicons dashicons-yes-alt"></span>
+                                    <?php _e('Validate CSS', 'trp-translate-map'); ?>
+                                </button>
+                            </p>
+                        </div>
+                    </form>
+
+                    <div class="trp-tm-css-example">
+                        <h4><?php _e('Example Usage:', 'trp-translate-map'); ?></h4>
+                        <div class="trp-tm-css-example-content">
+                            <div class="trp-tm-css-example-input">
+                                <strong><?php _e('You write:', 'trp-translate-map'); ?></strong>
+                                <pre><code>.jet-search__popup-trigger-container {
+    margin-right: 20px;
+}
+.login-password__wrapper svg {
+    left: 15px;
+    right: inherit !important;
+}</code></pre>
+                            </div>
+                            <div class="trp-tm-css-example-output">
+                                <strong><?php _e('Output CSS:', 'trp-translate-map'); ?></strong>
+                                <pre><code>html[lang="<?php echo esc_html($current_language); ?>"] .jet-search__popup-trigger-container {
+    margin-right: 20px;
+}
+html[lang="<?php echo esc_html($current_language); ?>"] .login-password__wrapper svg {
+    left: 15px;
+    right: inherit !important;
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="trp-tm-css-status" id="trp-tm-css-status" style="display: none;">
+                        <div class="notice">
+                            <p></p>
+                        </div>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="trp-tm-css-no-language">
+                    <p><?php _e('Please select a language above to start editing CSS.', 'trp-translate-map'); ?></p>
+                </div>
+            <?php endif; ?>
         </div>
     <?php
     }

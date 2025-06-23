@@ -36,10 +36,15 @@ class TRP_TM_Ajax
         add_action('wp_ajax_trp_tm_export_translations', array($this, 'export_translations'));
         add_action('wp_ajax_trp_tm_save_settings', array($this, 'save_settings'));
         add_action('wp_ajax_trp_tm_get_language_statistics', array($this, 'get_language_statistics'));
+        add_action('wp_ajax_trp_tm_save_css', array($this, 'save_css'));
+        add_action('wp_ajax_trp_tm_get_css', array($this, 'get_css'));
+        add_action('wp_ajax_trp_tm_get_language_css', array($this, 'get_language_css'));
 
         // Frontend AJAX actions (if needed)
         add_action('wp_ajax_trp_tm_get_frontend_translations', array($this, 'get_frontend_translations'));
         add_action('wp_ajax_nopriv_trp_tm_get_frontend_translations', array($this, 'get_frontend_translations'));
+        add_action('wp_ajax_trp_tm_get_language_css', array($this, 'get_language_css'));
+        add_action('wp_ajax_nopriv_trp_tm_get_language_css', array($this, 'get_language_css'));
     }
 
     /**
@@ -417,5 +422,197 @@ class TRP_TM_Ajax
         }
 
         return true;
+    }
+
+    /**
+     * Save custom CSS for language
+     */
+    public function save_css()
+    {
+        if (!$this->verify_admin_request()) {
+            wp_die();
+        }
+
+        $language_code = sanitize_text_field($_POST['language_code']);
+        $custom_css = wp_unslash($_POST['custom_css']); // Don't sanitize CSS content
+        $minify_css = isset($_POST['minify_css']) && $_POST['minify_css'] == '1';
+
+        if (empty($language_code)) {
+            wp_send_json_error(array('message' => __('Language code is required.', 'trp-translate-map')));
+        }
+
+        // Process CSS to add language prefix
+        $processed_css = $this->process_css_with_language_prefix($custom_css, $language_code);
+
+        // Minify CSS if requested
+        if ($minify_css) {
+            $processed_css = $this->minify_css($processed_css);
+        }
+
+        // Save the original CSS (without prefix) for editing
+        update_option('trp_tm_custom_css_' . $language_code, $custom_css);
+
+        // Save the processed CSS (with prefix) for frontend use
+        update_option('trp_tm_processed_css_' . $language_code, $processed_css);
+
+        // Save minification preference
+        update_option('trp_tm_minify_css_' . $language_code, $minify_css);
+
+        wp_send_json_success(array(
+            'message' => __('CSS saved successfully.', 'trp-translate-map'),
+            'processed_css' => $processed_css
+        ));
+    }
+
+    /**
+     * Get custom CSS for language
+     */
+    public function get_css()
+    {
+        if (!$this->verify_admin_request()) {
+            wp_die();
+        }
+
+        $language_code = sanitize_text_field($_POST['language_code']);
+
+        if (empty($language_code)) {
+            wp_send_json_error(array('message' => __('Language code is required.', 'trp-translate-map')));
+        }
+
+        $css_content = get_option('trp_tm_custom_css_' . $language_code, '');
+
+        wp_send_json_success(array(
+            'css_content' => $css_content,
+            'language_code' => $language_code
+        ));
+    }
+
+    /**
+     * Process CSS to add language attribute prefix
+     * This ensures CSS only applies to the specific language
+     */
+    private function process_css_with_language_prefix($css, $language_code)
+    {
+        if (empty($css) || empty($language_code)) {
+            return '';
+        }
+
+        // Create language-specific prefix
+        $prefix = 'html[lang="' . esc_attr($language_code) . '"]';
+        $processed_css = '';
+
+        // Remove comments first to avoid issues
+        $css = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $css);
+        $css = trim($css);
+
+        // Split CSS into individual rules using regex to handle nested braces
+        preg_match_all('/([^{}]+)\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/', $css, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $selectors_string = trim($match[1]);
+            $declarations = '{' . trim($match[2]) . '}';
+
+            if (empty($selectors_string)) {
+                continue;
+            }
+
+            // Split multiple selectors by comma
+            $selectors = array_map('trim', explode(',', $selectors_string));
+            $prefixed_selectors = array();
+
+            foreach ($selectors as $selector) {
+                if (empty($selector)) {
+                    continue;
+                }
+
+                // Skip if selector already has html[lang] prefix
+                if (preg_match('/^html\[lang\s*=\s*["\'][^"\']*["\']\]/', $selector)) {
+                    $prefixed_selectors[] = $selector;
+                } else {
+                    // Add language prefix to selector
+                    $prefixed_selectors[] = $prefix . ' ' . $selector;
+                }
+            }
+
+            if (!empty($prefixed_selectors)) {
+                $processed_css .= implode(', ', $prefixed_selectors) . ' ' . $declarations . "\n\n";
+            }
+        }
+
+        // Handle any remaining CSS that might not have been caught by regex
+        $remaining_css = preg_replace('/([^{}]+)\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/', '', $css);
+        $remaining_css = trim($remaining_css);
+
+        if (!empty($remaining_css)) {
+            // This might be media queries or other CSS constructs
+            $lines = explode("\n", $remaining_css);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (!empty($line) && !preg_match('/^@/', $line)) {
+                    $processed_css .= $prefix . ' ' . $line . "\n";
+                }
+            }
+        }
+
+        return trim($processed_css);
+    }
+
+    /**
+     * Get language-specific CSS for frontend
+     */
+    public function get_language_css()
+    {
+        if (!$this->verify_frontend_request()) {
+            wp_die();
+        }
+
+        $language_code = sanitize_text_field($_POST['language_code']);
+
+        if (empty($language_code)) {
+            wp_send_json_error(array('message' => __('Language code is required.', 'trp-translate-map')));
+        }
+
+        // Get processed CSS for the language
+        $css_content = get_option('trp_tm_processed_css_' . $language_code, '');
+
+        // Debug information
+        $debug_info = array(
+            'option_key' => 'trp_tm_processed_css_' . $language_code,
+            'css_length' => strlen($css_content),
+            'has_css' => !empty($css_content)
+        );
+
+        wp_send_json_success(array(
+            'css_content' => $css_content,
+            'language_code' => $language_code,
+            'debug' => $debug_info
+        ));
+    }
+
+    /**
+     * Minify CSS content
+     */
+    private function minify_css($css)
+    {
+        if (empty($css)) {
+            return '';
+        }
+
+        // Remove comments
+        $css = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $css);
+
+        // Remove whitespace
+        $css = preg_replace('/\s+/', ' ', $css);
+
+        // Remove unnecessary spaces
+        $css = preg_replace('/\s*{\s*/', '{', $css);
+        $css = preg_replace('/;\s*}/', '}', $css);
+        $css = preg_replace('/\s*;\s*/', ';', $css);
+        $css = preg_replace('/\s*,\s*/', ',', $css);
+        $css = preg_replace('/\s*:\s*/', ':', $css);
+        $css = preg_replace('/}\s*/', '}', $css);
+
+        // Remove leading/trailing whitespace
+        return trim($css);
     }
 }

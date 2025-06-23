@@ -60,6 +60,22 @@ class TRP_TM_Frontend
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('trp_tm_frontend_nonce')
         ));
+
+        // Don't load CSS here - let JavaScript handle it dynamically
+        // This prevents double loading when language switching occurs
+    }
+
+    /**
+     * Load language-specific CSS dynamically
+     * Note: This method is now handled by JavaScript to prevent duplicate loading
+     * and ensure proper language switching behavior
+     */
+    public function load_language_css()
+    {
+        // This method is intentionally left empty
+        // CSS loading is now handled entirely by frontend JavaScript
+        // to prevent duplicate loading and ensure proper language switching
+        return;
     }
 
     /**
@@ -239,25 +255,50 @@ class TRP_TM_Frontend
     }
 
     /**
-     * Add CSS for translated elements
+     * Add CSS for translated elements and custom language CSS
      */
     public function add_frontend_styles()
     {
+        // Get all available languages
+        $languages = array();
+        if (!empty($this->trp_settings['translation-languages'])) {
+            $languages = $this->trp_settings['translation-languages'];
+        }
+
     ?>
         <style type="text/css">
+            /* Base styles for translated elements */
             [data-trp-tm-translated] {
                 /* Optional: Add subtle indicator for translated elements */
             }
 
-            html[lang="ar"] [data-trp-tm-translated] {
+            /* RTL support for Arabic and other RTL languages */
+            html[lang="ar"] [data-trp-tm-translated],
+            html[lang="he"] [data-trp-tm-translated],
+            html[lang="fa"] [data-trp-tm-translated],
+            html[lang="ur"] [data-trp-tm-translated] {
                 direction: rtl;
                 text-align: right;
             }
 
-            html[lang="ar"] [data-no-translation] {
+            html[lang="ar"] [data-no-translation],
+            html[lang="he"] [data-no-translation],
+            html[lang="fa"] [data-no-translation],
+            html[lang="ur"] [data-no-translation] {
                 direction: ltr !important;
                 text-align: left !important;
             }
+
+            <?php
+            // Output custom CSS for each language
+            foreach ($languages as $language_code) {
+                $custom_css = get_option('trp_tm_processed_css_' . $language_code, '');
+                if (!empty($custom_css)) {
+                    echo "\n/* Custom CSS for " . esc_html($language_code) . " */\n";
+                    echo wp_strip_all_tags($custom_css) . "\n";
+                }
+            }
+            ?>
         </style>
 <?php
     }
